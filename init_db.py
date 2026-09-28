@@ -3,7 +3,8 @@
 Initialize the database with an admin user.
 Run once: python init_db.py
 """
-from app.db.base import Base, engine, SessionLocal
+from app.db.base import Base, engine
+from app.db.session import SessionLocal
 from app.models.customer import Customer
 from app.core.security import generate_api_key, hash_api_key
 
@@ -44,6 +45,9 @@ def init():
     print(f"API Key: {api_key}")
     print("=" * 60)
     print("WARNING: Store this key safely. It will not be shown again.")
+    print("If this ran in CI/a hosted shell, that key is now in whatever")
+    print("captured this stdout (build logs, terminal scrollback) — copy it")
+    print("out and clear the log/scrollback, don't leave it sitting there.")
     print("=" * 60)
 
 if __name__ == "__main__":

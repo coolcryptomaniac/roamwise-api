@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +6,8 @@ from contextlib import asynccontextmanager
 from app.core.config import get_settings
 from app.db.base import Base, engine
 from app.routers import itinerary, crowd, budget, packing, visa, usage, admin
+
+logger = logging.getLogger("roamwise_api")
 
 settings = get_settings()
 
@@ -26,11 +29,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — this API is authenticated via an API key header (X-API-Key /
+# Authorization: Bearer), never cookies, so allow_credentials must stay
+# False. allow_origins=["*"] + allow_credentials=True is an invalid CORS
+# combination anyway (rejected by spec-compliant browsers), and pairing a
+# wildcard origin with credentialed requests is the classic misconfig that
+# lets any site ride a signed-in user's session — moot here since we never
+# send credentials, but keeping allow_credentials=False makes that explicit
+# rather than accidental.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -44,12 +54,18 @@ async def add_rate_limit_headers(request: Request, call_next):
             response.headers[key] = str(value)
     return response
 
-# Global exception handler
+# Global exception handler — log the real error server-side, but never hand
+# an unauthenticated caller str(exc): a DB error can contain table/column
+# names, an httpx error can contain an internal URL, a validation error can
+# echo request internals. Every endpoint here is reachable pre-auth (the
+# handler fires before/around dependency errors too), so this is externally
+# visible surface, not just a dev convenience.
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error", "error": str(exc)},
+        content={"detail": "Internal server error"},
     )
 
 # Include routers

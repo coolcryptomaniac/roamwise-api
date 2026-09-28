@@ -8,8 +8,10 @@ class Settings(BaseSettings):
     description: str = "AI-powered travel intelligence API for businesses"
     debug: bool = False
 
-    # Security
-    secret_key: str = "change-this-in-production-min-32-characters"
+    # Security — no insecure default. If SECRET_KEY isn't set via env/.env,
+    # startup fails loudly instead of silently signing JWTs with a value
+    # that's sitting in plaintext in this repo's own history.
+    secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 

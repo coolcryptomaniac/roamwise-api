@@ -7,7 +7,10 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./roamwise_api.db
-      - SECRET_KEY=your-super-secret-key-change-in-production
+      # No fallback value: docker-compose fails fast if SECRET_KEY isn't set
+      # in the shell/.env, instead of silently signing JWTs with a value
+      # that's sitting in plaintext in this file's git history.
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in your .env before starting (32+ random chars)}
       - REDIS_URL=redis://redis:6379/0
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
     volumes:
@@ -18,8 +21,12 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # No published port: Redis here is a private cache for the api service,
+    # reached over the compose network by service name. Publishing 6379 to
+    # the host put an unauthenticated Redis instance on the host's network
+    # interface, reachable by anything else on that host/network.
+    expose:
+      - "6379"
 
   # Uncomment for PostgreSQL in production
   # db:
