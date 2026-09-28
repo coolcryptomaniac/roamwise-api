@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     stripe_secret_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
 
+    # AI (itinerary generation) — same Groq route the main RoamWise Worker
+    # uses. Optional by design: if unset, /v1/itinerary/generate falls back
+    # to a structural skeleton and says so, rather than the endpoint being
+    # broken or silently returning something fake.
+    groq_api_key: Optional[str] = None
+    groq_model: str = "llama-3.3-70b-versatile"
+
     # Rate Limits (requests per minute)
     rate_limit_basic: int = 20
     rate_limit_pro: int = 100

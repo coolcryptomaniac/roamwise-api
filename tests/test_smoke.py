@@ -73,17 +73,61 @@ def test_visa_guide_unknown_pair_is_honest_not_fabricated(client, api_key):
     assert r.json()["covered"] is False
 
 
-def test_itinerary_generate(client, api_key):
+def test_itinerary_generate_falls_back_honestly_without_groq_key(client, api_key):
+    # conftest never sets GROQ_API_KEY, so this exercises the fallback path.
     r = client.post(
         "/v1/itinerary/generate",
         headers={"X-API-Key": api_key},
         json={"destination": "Manali", "duration_days": 4, "travelers": 2},
     )
     assert r.status_code == 200
-    days = r.json()["days"]
+    body = r.json()
+    assert body["source"] == "fallback"
+    days = body["days"]
     assert len(days) == 4
     assert days[0]["label"] == "Arrival"
     assert days[-1]["label"] == "Departure"
+
+
+def test_itinerary_generate_uses_ai_when_configured(client, api_key, monkeypatch):
+    import app.routers.itinerary as itinerary_module
+
+    async def fake_call_groq(prompt):
+        return [
+            {"day": 1, "label": "Arrival", "morning": "Land, settle in", "afternoon": "Local market", "evening": "Rest", "notes": ""},
+            {"day": 2, "label": "Explore", "morning": "Old town walk", "afternoon": "Museum", "evening": "River-side dinner", "notes": ""},
+        ]
+
+    monkeypatch.setattr(itinerary_module, "_call_groq", fake_call_groq)
+    monkeypatch.setattr(itinerary_module.settings, "groq_api_key", "fake-key-for-test")
+
+    r = client.post(
+        "/v1/itinerary/generate",
+        headers={"X-API-Key": api_key},
+        json={"destination": "Jaipur", "duration_days": 2, "travelers": 1},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["source"] == "ai"
+    assert len(body["days"]) == 2
+    assert body["days"][0]["morning"] == "Land, settle in"
+
+
+def test_itinerary_generate_ai_failure_falls_back_not_500(client, api_key, monkeypatch):
+    import app.routers.itinerary as itinerary_module
+
+    async def failing_call_groq(prompt):
+        return None  # _call_groq already swallows provider errors internally
+
+    monkeypatch.setattr(itinerary_module, "_call_groq", failing_call_groq)
+
+    r = client.post(
+        "/v1/itinerary/generate",
+        headers={"X-API-Key": api_key},
+        json={"destination": "Jaipur", "duration_days": 2, "travelers": 1},
+    )
+    assert r.status_code == 200
+    assert r.json()["source"] == "fallback"
 
 
 def test_crowd_forecast_refuses_instead_of_fabricating(client, api_key):
