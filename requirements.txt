@@ -1,7 +1,14 @@
 fastapi==0.141.1
 uvicorn[standard]==0.30.0
-pydantic==2.8.2
+pydantic==2.13.5
 pydantic-settings==2.15.0
+# app/routers/admin.py uses pydantic's EmailStr, which pydantic has never
+# bundled validation for — it always needs email-validator installed
+# explicitly (https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.EmailStr).
+# This was only ever present as some other package's transitive
+# dependency, which silently stopped being the case with this fastapi
+# bump — pin it directly so that isn't left to chance again.
+email-validator==2.3.0
 sqlalchemy==2.0.31
 alembic==1.13.2
 python-jose[cryptography]==3.5.0
