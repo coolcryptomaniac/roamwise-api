@@ -25,6 +25,16 @@ class Settings(BaseSettings):
     stripe_secret_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
 
+    # Stripe Price IDs for the customer tiers in TIER_QUOTAS (see
+    # app/routers/admin.py). Not yet read anywhere — billing/checkout
+    # wiring is still pending — but declared here (rather than left
+    # undeclared) so that setting them in .env, as .env.example already
+    # documents, doesn't crash startup with a pydantic "extra_forbidden"
+    # error.
+    tier_basic_price_id: Optional[str] = None
+    tier_pro_price_id: Optional[str] = None
+    tier_enterprise_price_id: Optional[str] = None
+
     # AI (itinerary generation) — same Groq route the main RoamWise Worker
     # uses. Optional by design: if unset, /v1/itinerary/generate falls back
     # to a structural skeleton and says so, rather than the endpoint being
