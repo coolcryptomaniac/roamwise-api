@@ -9,7 +9,7 @@ pydantic-settings==2.15.0
 # dependency, which silently stopped being the case with this fastapi
 # bump — pin it directly so that isn't left to chance again.
 email-validator==2.3.0
-sqlalchemy==2.0.31
+sqlalchemy==2.1.3
 alembic==1.20.0
 python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
