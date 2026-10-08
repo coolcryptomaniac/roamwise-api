@@ -5,6 +5,23 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      # fastapi pins a minimum pydantic version, so bumping one without
+      # the other can make the pair unresolvable (#3: fastapi 0.141.1
+      # needs pydantic>=2.9.0, but pydantic was still pinned at 2.8.2).
+      # Grouping them means a PR that breaks this way fails its own CI
+      # instead of landing broken for the next unrelated PR to hit.
+      fastapi-pydantic:
+        patterns:
+          - "fastapi"
+          - "pydantic"
+          - "pydantic-settings"
+      # Same reasoning for the test stack (#7: pytest 9.1.1 needs
+      # pytest-asyncio>=1.x; 0.23.8 pinned pytest<9).
+      pytest:
+        patterns:
+          - "pytest"
+          - "pytest-*"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
