@@ -1,5 +1,5 @@
 fastapi==0.141.1
-uvicorn[standard]==0.30.0
+uvicorn[standard]==0.54.0
 pydantic==2.13.5
 pydantic-settings==2.15.0
 # app/routers/admin.py uses pydantic's EmailStr, which pydantic has never
@@ -10,14 +10,14 @@ pydantic-settings==2.15.0
 # bump — pin it directly so that isn't left to chance again.
 email-validator==2.3.0
 sqlalchemy==2.0.31
-alembic==1.13.2
+alembic==1.20.0
 python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
 httpx==0.28.1
 redis==5.0.7
 slowapi==0.1.9
-stripe==9.8.0
+stripe==16.0.0
 python-dotenv==1.0.1
-pytest==8.3.2
-pytest-asyncio==0.23.8
+pytest==9.1.1
+pytest-asyncio==1.4.0
