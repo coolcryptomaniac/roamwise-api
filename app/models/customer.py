@@ -18,5 +18,8 @@ class Customer(Base):
 
     monthly_quota = Column(Integer, default=1000, nullable=False)
     requests_used_this_month = Column(Integer, default=0, nullable=False)
+    # UTC month ("YYYY-MM") that requests_used_this_month counts. When the month
+    # changes, the counter resets on the customer's next request.
+    quota_period = Column(String(7), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
