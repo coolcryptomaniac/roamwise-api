@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -9,6 +10,21 @@ from app.core.config import get_settings
 
 settings = get_settings()
 security_bearer = HTTPBearer(auto_error=False)
+
+
+def current_quota_period(now: datetime | None = None) -> str:
+    return (now or datetime.now(timezone.utc)).strftime("%Y-%m")
+
+
+def roll_monthly_quota(customer: Customer, db: Session, now: datetime | None = None) -> None:
+    """Start a fresh monthly count when the calendar month (UTC) has changed.
+    Without this the counter only ever grew, so a customer was locked out for good
+    after their first month's quota."""
+    period = current_quota_period(now)
+    if customer.quota_period != period:
+        customer.quota_period = period
+        customer.requests_used_this_month = 0
+        db.commit()
 
 async def get_api_key(
     request: Request,
@@ -48,7 +64,8 @@ async def get_api_key(
             detail="Invalid or expired API key",
         )
 
-    # Check monthly quota
+    # Check monthly quota (reset first if a new month has started)
+    roll_monthly_quota(customer, db)
     if customer.requests_used_this_month >= customer.monthly_quota:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

@@ -11,10 +11,19 @@ logger = logging.getLogger("roamwise_api")
 
 settings = get_settings()
 
+def _add_missing_columns():
+    """create_all() never alters existing tables; add columns introduced later."""
+    from sqlalchemy import inspect, text
+    cols = {c["name"] for c in inspect(engine).get_columns("customers")}
+    if "quota_period" not in cols:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE customers ADD COLUMN quota_period VARCHAR(7)"))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create tables
     Base.metadata.create_all(bind=engine)
+    _add_missing_columns()
     yield
     # Shutdown: cleanup if needed
     pass
