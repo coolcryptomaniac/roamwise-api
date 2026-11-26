@@ -1,7 +1,7 @@
-fastapi==0.141.1
+fastapi==0.143.2
 uvicorn[standard]==0.54.0
-pydantic==2.13.5
-pydantic-settings==2.15.0
+pydantic==2.14.1
+pydantic-settings==2.16.0
 # app/routers/admin.py uses pydantic's EmailStr, which pydantic has never
 # bundled validation for — it always needs email-validator installed
 # explicitly (https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.EmailStr).
@@ -15,7 +15,7 @@ python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.32
 httpx==0.28.1
-redis==5.0.7
+redis==8.1.0
 slowapi==0.1.10
 stripe==16.0.0
 python-dotenv==1.2.4
